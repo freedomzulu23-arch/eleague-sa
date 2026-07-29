@@ -9,24 +9,33 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleRegister = async () => {
-  console.log("Registering user...");
+const handleRegister = async () => {
+  try {
+    console.log("=== STARTING REGISTRATION ===");
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
-  console.log("DATA:", data);
-  console.log("ERROR:", error);
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
-  if (error) {
-    alert(error.message);
-    return;
+    if (error) {
+      alert("ERROR: " + error.message);
+      return;
+    }
+
+    alert(
+      "Registration finished.\n\nCheck the browser console (F12) for DATA and ERROR."
+    );
+  } catch (err) {
+    console.error(err);
+    alert("Unexpected error.");
   }
-
-  alert("Registration successful!");
 };
+
+
 return (
     <main className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
       <div className="bg-zinc-900 p-8 rounded-2xl shadow-xl w-full max-w-md">
