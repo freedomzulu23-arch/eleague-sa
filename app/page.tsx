@@ -1,14 +1,7 @@
-import {supabase} from "../lib/supabase";
+
 import Navbar from "./components/Navbar";
 export default async function Home() {
-  const {data, error} = await supabase.from("profiles")
-  .select("*")
-
-  if (error) {
-    console.log("supabase Error:", error)
-  }else {
-    console.log("supabase Connected:", data)
-  }
+  
  
   return (
     <main className="min-h-screen bg-zinc-950 text-white">

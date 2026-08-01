@@ -18,23 +18,37 @@ const handleRegister = async () => {
       password,
     });
 
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
-
     if (error) {
-      alert("ERROR: " + error.message);
+      alert(error.message);
       return;
     }
 
-    alert(
-      "Registration finished.\n\nCheck the browser console (F12) for DATA and ERROR."
-    );
+    if (!data.user) {
+      alert("User created, but no user data was returned.");
+      return;
+    }
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .insert({
+        id: data.user.id,
+        full_name: fullName,
+        username: username,
+      });
+
+    if (profileError) {
+      console.error(profileError);
+      alert(profileError.message);
+      return;
+    }
+
+    alert("🎉 Registration successful! Please check your email to verify your account.");
+
   } catch (err) {
     console.error(err);
     alert("Unexpected error.");
   }
 };
-
 
 return (
     <main className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
