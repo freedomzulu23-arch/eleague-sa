@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 
-export default function AdminDashboard() {
+export default function AdminPage() {
   const [pendingFixtures, setPendingFixtures] = useState<any[]>([]);
   const [pendingCupMatches, setPendingCupMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,7 +116,6 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-white">👑 Admin Dashboard</h1>
@@ -133,7 +132,6 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        {/* Stats Summary */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-white">{stats.total}</div>
@@ -153,7 +151,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Pending Results */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-white">
@@ -175,7 +172,6 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* League Fixtures */}
               {pendingFixtures.map((match) => (
                 <div key={match.id} className="bg-zinc-800 border border-zinc-700 rounded-lg p-4">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -220,7 +216,6 @@ export default function AdminDashboard() {
                 </div>
               ))}
 
-              {/* Cup Matches */}
               {pendingCupMatches.map((match) => (
                 <div key={match.id} className="bg-zinc-800 border border-zinc-700 rounded-lg p-4">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
