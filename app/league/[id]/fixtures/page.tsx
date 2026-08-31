@@ -10,9 +10,8 @@ export default function FixturesPage() {
   const params = useParams();
   const leagueId = params.id as string;
   
-  const [fixtures, setFixtures] = useState([]);
-  const [teams, setTeams] = useState([]);
-  const [tableData, setTableData] = useState([]);
+  const [fixtures, setFixtures] = useState<any[]>([]);
+  const [tableData, setTableData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
@@ -32,15 +31,6 @@ export default function FixturesPage() {
 
       if (fixturesError) throw fixturesError;
       setFixtures(fixturesData || []);
-
-      // Fetch all teams in this league for the FixturesList component
-      const { data: teamsData, error: teamsError } = await supabase
-        .from('league_teams')
-        .select('id, team_name')
-        .eq('league_id', leagueId);
-
-      if (teamsError) throw teamsError;
-      setTeams(teamsData || []);
 
       // Fetch league table
       const { data: tableData, error: tableError } = await supabase
@@ -74,7 +64,6 @@ export default function FixturesPage() {
         <FixturesList 
           leagueId={leagueId}
           fixtures={fixtures}
-          teams={teams}
           onResultSaved={loadData}
         />
       </div>
