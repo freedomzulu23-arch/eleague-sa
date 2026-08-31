@@ -1,26 +1,24 @@
-import Link from 'next/link';
-
 export default function AdminPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+    <div style={{ minHeight: '100vh', backgroundColor: '#18181b', color: 'white', padding: '24px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
           <div>
-            <h1 className="text-3xl font-bold text-white">👑 Admin Dashboard</h1>
-            <p className="text-zinc-400 mt-1">Admin panel - Coming soon</p>
+            <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>👑 Admin Dashboard</h1>
+            <p style={{ color: '#a1a1aa', marginTop: '4px' }}>Admin panel - Coming soon</p>
           </div>
-          <Link
+          <a
             href="/dashboard"
-            className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg text-sm transition"
+            style={{ backgroundColor: '#27272a', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none' }}
           >
             ← Back to Dashboard
-          </Link>
+          </a>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center">
-          <div className="text-6xl mb-4">🚧</div>
-          <h2 className="text-2xl font-bold text-white mb-2">Admin Panel Under Construction</h2>
-          <p className="text-zinc-400">The admin dashboard is being rebuilt.</p>
+        <div style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px', padding: '48px', textAlign: 'center' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '16px' }}>🚧</div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px' }}>Admin Panel Under Construction</h2>
+          <p style={{ color: '#a1a1aa' }}>The admin dashboard is being rebuilt.</p>
         </div>
       </div>
     </div>
