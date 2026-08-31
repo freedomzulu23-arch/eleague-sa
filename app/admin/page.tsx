@@ -25,9 +25,9 @@ export default function AdminDashboard() {
         .select('status');
 
       const total = allFixtures?.length || 0;
-      const approved = allFixtures?.filter(f => f.status === 'approved').length || 0;
-      const rejected = allFixtures?.filter(f => f.status === 'rejected').length || 0;
-      const pending = allFixtures?.filter(f => f.status === 'pending' || !f.status).length || 0;
+      const approved = allFixtures?.filter((f: any) => f.status === 'approved').length || 0;
+      const rejected = allFixtures?.filter((f: any) => f.status === 'rejected').length || 0;
+      const pending = allFixtures?.filter((f: any) => f.status === 'pending' || !f.status).length || 0;
 
       setStats({ total, approved, rejected, pending });
 
@@ -91,8 +91,6 @@ export default function AdminDashboard() {
       
       // 🔔 Send notification to the user who submitted the result
       if (match) {
-        // Get the user who submitted this fixture (if we have created_by field)
-        // For now, we'll notify the league owner
         try {
           // Get league owner
           const { data: league } = await supabase
@@ -174,7 +172,6 @@ export default function AdminDashboard() {
 
   const updateLeagueTable = async (leagueId: string) => {
     try {
-      // This function should recalculate the league table
       console.log('Updating league table for:', leagueId);
     } catch (error) {
       console.error('Error updating league table:', error);
