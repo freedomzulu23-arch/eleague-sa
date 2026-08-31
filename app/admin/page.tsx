@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
-import { createNotification } from '@/services/notificationService';
 
 export default function AdminDashboard() {
   const [pendingFixtures, setPendingFixtures] = useState<any[]>([]);
@@ -70,14 +69,6 @@ export default function AdminDashboard() {
   const handleApprove = async (matchId: string, type: 'league' | 'cup') => {
     const table = type === 'league' ? 'fixtures' : 'cup_matches';
     
-    // First, get the match data to know the league_id
-    const { data: match } = await supabase
-      .from(table)
-      .select('*')
-      .eq('id', matchId)
-      .single();
-
-    // Update status to approved
     const { error } = await supabase
       .from(table)
       .update({ status: 'approved' })
@@ -88,36 +79,6 @@ export default function AdminDashboard() {
       console.error(error);
     } else {
       alert('✅ Result approved!');
-      
-      // 🔔 Send notification to the user who submitted the result
-      if (match) {
-        try {
-          // Get league owner
-          const { data: league } = await supabase
-            .from('leagues')
-            .select('created_by')
-            .eq('id', match.league_id)
-            .single();
-
-          if (league?.created_by) {
-            await createNotification(
-              league.created_by,
-              '✅ Result Approved!',
-              `The match result (${match.home_score} - ${match.away_score}) has been approved.`,
-              'success',
-              type === 'league' ? `/league/${match.league_id}/fixtures` : `/cups/${match.cup_id}/matches`
-            );
-          }
-        } catch (notifError) {
-          console.error('Error sending notification:', notifError);
-        }
-
-        // If it's a league fixture, update the league table
-        if (type === 'league' && match) {
-          await updateLeagueTable(match.league_id);
-        }
-      }
-      
       loadPendingResults();
     }
   };
@@ -125,13 +86,6 @@ export default function AdminDashboard() {
   const handleReject = async (matchId: string, type: 'league' | 'cup') => {
     const table = type === 'league' ? 'fixtures' : 'cup_matches';
     
-    // First, get the match data
-    const { data: match } = await supabase
-      .from(table)
-      .select('*')
-      .eq('id', matchId)
-      .single();
-
     const { error } = await supabase
       .from(table)
       .update({ status: 'rejected' })
@@ -142,39 +96,7 @@ export default function AdminDashboard() {
       console.error(error);
     } else {
       alert('❌ Result rejected');
-      
-      // 🔔 Send notification to the user who submitted the result
-      if (match) {
-        try {
-          const { data: league } = await supabase
-            .from('leagues')
-            .select('created_by')
-            .eq('id', match.league_id)
-            .single();
-
-          if (league?.created_by) {
-            await createNotification(
-              league.created_by,
-              '❌ Result Rejected',
-              `The match result was rejected. Please check the screenshot and try again.`,
-              'error',
-              type === 'league' ? `/league/${match.league_id}/fixtures` : `/cups/${match.cup_id}/matches`
-            );
-          }
-        } catch (notifError) {
-          console.error('Error sending notification:', notifError);
-        }
-      }
-      
       loadPendingResults();
-    }
-  };
-
-  const updateLeagueTable = async (leagueId: string) => {
-    try {
-      console.log('Updating league table for:', leagueId);
-    } catch (error) {
-      console.error('Error updating league table:', error);
     }
   };
 
