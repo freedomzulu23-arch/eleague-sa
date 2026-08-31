@@ -24,3 +24,155 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ============================================
+   MOBILE RESPONSIVE IMPROVEMENTS
+   ============================================ */
+
+/* Touch-friendly inputs - Apple's recommended minimum touch target */
+input, 
+select, 
+button,
+a {
+  min-height: 44px;
+}
+
+/* Better spacing on mobile */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* Card improvements */
+  .card {
+    padding: 12px;
+  }
+
+  /* Table improvements - horizontal scroll */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Stat cards on mobile - 2 columns instead of 3 */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  /* Button improvements */
+  .btn {
+    padding: 10px 16px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  /* Font sizes on mobile */
+  h1 {
+    font-size: 1.5rem;
+  }
+  h2 {
+    font-size: 1.2rem;
+  }
+  h3 {
+    font-size: 1rem;
+  }
+  p {
+    font-size: 0.95rem;
+  }
+
+  /* Grid improvements for mobile */
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Gap improvements */
+  .gap-4 {
+    gap: 10px;
+  }
+  .gap-6 {
+    gap: 12px;
+  }
+
+  /* Padding improvements */
+  .p-6 {
+    padding: 12px;
+  }
+  .p-8 {
+    padding: 16px;
+  }
+  .px-8 {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Modal improvements for mobile */
+  .modal-content {
+    margin: 12px;
+    max-width: 100%;
+    border-radius: 16px;
+  }
+
+  /* Table improvements */
+  table {
+    font-size: 12px;
+  }
+  table th,
+  table td {
+    padding: 6px 8px;
+  }
+}
+
+/* Safe area for notched phones (iPhone X and newer) */
+@supports (padding: max(0px)) {
+  .pb-safe {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  .pt-safe {
+    padding-top: max(16px, env(safe-area-inset-top));
+  }
+}
+
+/* Prevent zoom on input focus on iOS */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Better touch feedback on mobile */
+@media (hover: none) {
+  .hover\:scale-105:hover {
+    transform: none;
+  }
+  button:active,
+  a:active {
+    opacity: 0.7;
+    transition: opacity 0.1s;
+  }
+}
+
+/* Smooth scrolling for mobile */
+@media (max-width: 640px) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Dark scrollbar for mobile */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #18181b;
+}
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
