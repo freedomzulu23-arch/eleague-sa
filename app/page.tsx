@@ -67,7 +67,7 @@ export default async function Home() {
           </Link>
 
           <Link
-            href="/admin"
+            href="/admin-panel"
             className="group bg-zinc-900 hover:bg-zinc-800 rounded-xl p-6 text-center transition border border-zinc-800 hover:border-red-500/50"
           >
             <div className="text-5xl mb-3 group-hover:scale-110 transition">👑</div>
