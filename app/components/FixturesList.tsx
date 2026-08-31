@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { saveFixtureResult } from '@/services/fixtureService';
+import { useState, useEffect } from "react";
+import { supabase } from '@/lib/supabaseClient';
 import ScreenshotUpload from './ScreenshotUpload';
 
 interface Fixture {
@@ -29,6 +29,23 @@ export default function FixturesList({ leagueId, fixtures: initialFixtures, onRe
   const [fixtures, setFixtures] = useState(initialFixtures);
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [players, setPlayers] = useState<any[]>([]);
+  const [goalScorers, setGoalScorers] = useState<Record<string, { home: string[]; away: string[] }>>({});
+
+  // Load players for this league
+  useEffect(() => {
+    const loadPlayers = async () => {
+      const { data } = await supabase
+        .from('players')
+        .select(`
+          *,
+          team:league_teams!team_id(id, team_name)
+        `)
+        .eq('team.league_id', leagueId);
+      setPlayers(data || []);
+    };
+    loadPlayers();
+  }, [leagueId]);
 
   const handleScoreChange = (fixtureId: string, side: 'home' | 'away', value: string) => {
     const numValue = value === '' ? undefined : parseInt(value, 10);
@@ -60,8 +77,85 @@ export default function FixturesList({ leagueId, fixtures: initialFixtures, onRe
     setError(null);
 
     try {
-      await saveFixtureResult(fixtureId, fixture.home_score, fixture.away_score);
+      // Save the fixture result
+      const { error: updateError } = await supabase
+        .from('fixtures')
+        .update({
+          home_score: fixture.home_score,
+          away_score: fixture.away_score,
+          played: true,
+          played_at: new Date().toISOString(),
+        })
+        .eq('id', fixtureId);
+
+      if (updateError) throw updateError;
+
+      // Save goal scorers
+      const scorers = goalScorers[fixtureId] || { home: [], away: [] };
+      const allScorers = [...scorers.home, ...scorers.away];
       
+      for (const playerId of allScorers) {
+        const { data: existingStat } = await supabase
+          .from('player_stats')
+          .select('*')
+          .eq('player_id', playerId)
+          .eq('league_id', leagueId)
+          .single();
+
+        if (existingStat) {
+          await supabase
+            .from('player_stats')
+            .update({
+              goals: existingStat.goals + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingStat.id);
+        } else {
+          await supabase
+            .from('player_stats')
+            .insert({
+              player_id: playerId,
+              league_id: leagueId,
+              season: '2026',
+              goals: 1,
+              appearances: 1
+            });
+        }
+      }
+
+      // Update appearances for all players in both teams
+      const homeTeamPlayers = players.filter(p => p.team_id === fixture.home_team_id);
+      const awayTeamPlayers = players.filter(p => p.team_id === fixture.away_team_id);
+      
+      for (const player of [...homeTeamPlayers, ...awayTeamPlayers]) {
+        const { data: existingStat } = await supabase
+          .from('player_stats')
+          .select('*')
+          .eq('player_id', player.id)
+          .eq('league_id', leagueId)
+          .single();
+
+        if (existingStat) {
+          await supabase
+            .from('player_stats')
+            .update({
+              appearances: existingStat.appearances + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingStat.id);
+        } else {
+          await supabase
+            .from('player_stats')
+            .insert({
+              player_id: player.id,
+              league_id: leagueId,
+              season: '2026',
+              appearances: 1
+            });
+        }
+      }
+
+      // Update local state
       setFixtures(prev =>
         prev.map(f =>
           f.id === fixtureId
@@ -86,6 +180,10 @@ export default function FixturesList({ leagueId, fixtures: initialFixtures, onRe
     return acc;
   }, {} as Record<string, Fixture[]>);
 
+  const getPlayersByTeam = (teamId: string) => {
+    return players.filter(p => p.team_id === teamId);
+  };
+
   return (
     <div className="space-y-8">
       {error && (
@@ -101,10 +199,12 @@ export default function FixturesList({ leagueId, fixtures: initialFixtures, onRe
           </div>
           <div className="divide-y">
             {roundFixtures.map((fixture) => {
-              // Get team name (supports both 'name' and 'team_name')
               const homeName = fixture.home_team?.name || fixture.home_team?.team_name || 'TBD';
               const awayName = fixture.away_team?.name || fixture.away_team?.team_name || 'TBD';
-              
+              const homeTeamPlayers = getPlayersByTeam(fixture.home_team_id);
+              const awayTeamPlayers = getPlayersByTeam(fixture.away_team_id);
+              const scorers = goalScorers[fixture.id] || { home: [], away: [] };
+
               return (
                 <div key={fixture.id} className="p-4 hover:bg-gray-50">
                   <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -167,7 +267,79 @@ export default function FixturesList({ leagueId, fixtures: initialFixtures, onRe
                     )}
                   </div>
 
-                  {/* 📸 Screenshot Upload - Added here */}
+                  {/* Goal Scorers */}
+                  {!fixture.played && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">⚽ Home Scorers</p>
+                          <div className="flex flex-wrap gap-1">
+                            {homeTeamPlayers.map((player) => (
+                              <label key={player.id} className="text-xs flex items-center gap-1 bg-gray-100 px-2 py-1 rounded cursor-pointer hover:bg-gray-200">
+                                <input
+                                  type="checkbox"
+                                  checked={scorers.home.includes(player.id)}
+                                  onChange={() => {
+                                    setGoalScorers(prev => {
+                                      const current = prev[fixture.id] || { home: [], away: [] };
+                                      const updated = current.home.includes(player.id)
+                                        ? current.home.filter(id => id !== player.id)
+                                        : [...current.home, player.id];
+                                      return {
+                                        ...prev,
+                                        [fixture.id]: { ...current, home: updated }
+                                      };
+                                    });
+                                  }}
+                                  disabled={saving === fixture.id}
+                                  className="w-3 h-3"
+                                />
+                                {player.name}
+                              </label>
+                            ))}
+                            {homeTeamPlayers.length === 0 && (
+                              <span className="text-xs text-gray-400">No players added</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">⚽ Away Scorers</p>
+                          <div className="flex flex-wrap gap-1">
+                            {awayTeamPlayers.map((player) => (
+                              <label key={player.id} className="text-xs flex items-center gap-1 bg-gray-100 px-2 py-1 rounded cursor-pointer hover:bg-gray-200">
+                                <input
+                                  type="checkbox"
+                                  checked={scorers.away.includes(player.id)}
+                                  onChange={() => {
+                                    setGoalScorers(prev => {
+                                      const current = prev[fixture.id] || { home: [], away: [] };
+                                      const updated = current.away.includes(player.id)
+                                        ? current.away.filter(id => id !== player.id)
+                                        : [...current.away, player.id];
+                                      return {
+                                        ...prev,
+                                        [fixture.id]: { ...current, away: updated }
+                                      };
+                                    });
+                                  }}
+                                  disabled={saving === fixture.id}
+                                  className="w-3 h-3"
+                                />
+                                {player.name}
+                              </label>
+                            ))}
+                            {awayTeamPlayers.length === 0 && (
+                              <span className="text-xs text-gray-400">No players added</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">Select players who scored</p>
+                    </div>
+                  )}
+
+                  {/* Screenshot Upload */}
                   <div className="mt-3 pt-3 border-t border-gray-200">
                     <ScreenshotUpload 
                       matchId={fixture.id}
