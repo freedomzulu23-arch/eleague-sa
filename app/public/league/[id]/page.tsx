@@ -1,8 +1,12 @@
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-// This is a Server Component (no 'use client')
+// Create Supabase client directly (bypassing the client file)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 export default async function PublicLeaguePage({
   params,
 }: {
