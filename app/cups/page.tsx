@@ -35,7 +35,7 @@ export default function CupsPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header with Back Button */}
+        {/* Header with Back, Dashboard, and Create Cup buttons */}
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => router.back()}
@@ -46,7 +46,19 @@ export default function CupsPage() {
             </svg>
             Back
           </button>
+
+          <Link
+            href="/dashboard"
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Dashboard
+          </Link>
+
           <h1 className="text-3xl font-bold text-white flex-1">🏆 Cups</h1>
+
           <Link
             href="/cups/create"
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold transition flex items-center gap-2"
