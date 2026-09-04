@@ -7,6 +7,55 @@ import { supabase } from '../../../lib/supabaseClient';
 import DeleteModal from '@/app/components/DeleteModal';
 import { exportLeagueTable, exportFixtures, exportPlayerStats } from '@/services/exportService';
 
+// League Table Component
+function LeagueTable({ data }: { data: any[] }) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-white p-4 rounded shadow text-center text-gray-500">
+        No matches played yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white p-4 rounded shadow overflow-x-auto">
+      <h2 className="text-lg font-bold mb-3 text-black">📊 League Table</h2>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b">
+            <th className="text-left py-2 px-2 text-gray-600">#</th>
+            <th className="text-left py-2 px-2 text-gray-600">Team</th>
+            <th className="text-center py-2 px-2 text-gray-600">P</th>
+            <th className="text-center py-2 px-2 text-gray-600">W</th>
+            <th className="text-center py-2 px-2 text-gray-600">D</th>
+            <th className="text-center py-2 px-2 text-gray-600">L</th>
+            <th className="text-center py-2 px-2 text-gray-600">GF</th>
+            <th className="text-center py-2 px-2 text-gray-600">GA</th>
+            <th className="text-center py-2 px-2 text-gray-600">GD</th>
+            <th className="text-center py-2 px-2 font-bold text-gray-800">Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, index) => (
+            <tr key={row.id} className="border-b hover:bg-gray-50">
+              <td className="py-2 px-2 font-medium">{index + 1}</td>
+              <td className="py-2 px-2 font-medium">{row.team_name}</td>
+              <td className="py-2 px-2 text-center">{row.played}</td>
+              <td className="py-2 px-2 text-center text-green-600">{row.won}</td>
+              <td className="py-2 px-2 text-center text-yellow-600">{row.drawn}</td>
+              <td className="py-2 px-2 text-center text-red-600">{row.lost}</td>
+              <td className="py-2 px-2 text-center">{row.goals_for}</td>
+              <td className="py-2 px-2 text-center">{row.goals_against}</td>
+              <td className="py-2 px-2 text-center">{row.goal_difference}</td>
+              <td className="py-2 px-2 text-center font-bold text-lg">{row.points}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function LeaguePage() {
   const params = useParams();
   const router = useRouter();
@@ -20,6 +69,7 @@ export default function LeaguePage() {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [leagueTable, setLeagueTable] = useState<any[]>([]);
 
   const loadData = async () => {
     try {
@@ -73,6 +123,18 @@ export default function LeaguePage() {
       
       if (playedError) throw new Error('Failed to load played count: ' + playedError.message);
       setPlayedCount(playedCount || 0);
+
+      // Get league table
+      const { data: tableData, error: tableError } = await supabase
+        .from('league_table')
+        .select('*')
+        .eq('league_id', leagueId)
+        .order('points', { ascending: false })
+        .order('goal_difference', { ascending: false });
+
+      if (!tableError) {
+        setLeagueTable(tableData || []);
+      }
 
     } catch (error: any) {
       console.error('Error:', error);
@@ -194,7 +256,18 @@ export default function LeaguePage() {
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-black">{league.name}</h1>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard"
+            className="bg-zinc-600 hover:bg-zinc-700 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1 transition"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Dashboard
+          </Link>
+          <h1 className="text-2xl font-bold text-black">{league.name}</h1>
+        </div>
         <div className="flex gap-2">
           {/* Public View Button */}
           <Link
@@ -246,6 +319,13 @@ export default function LeaguePage() {
               </span>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* League Table */}
+      {leagueTable && leagueTable.length > 0 && (
+        <div className="mb-6">
+          <LeagueTable data={leagueTable} />
         </div>
       )}
 
