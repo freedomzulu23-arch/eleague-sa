@@ -76,6 +76,8 @@ export async function saveFixtureResult(
   homeScore: number,
   awayScore: number
 ) {
+  console.log('🔵 saveFixtureResult called:', { fixtureId, homeScore, awayScore });
+
   // 1. Save the fixture result
   const { data: fixture, error: fixtureError } = await supabase
     .from('fixtures')
@@ -89,9 +91,15 @@ export async function saveFixtureResult(
     .select()
     .single();
 
-  if (fixtureError) throw new Error(`Failed to save fixture: ${fixtureError.message}`);
+  if (fixtureError) {
+    console.error('❌ Fixture save error:', fixtureError);
+    throw new Error(`Failed to save fixture: ${fixtureError.message}`);
+  }
+
+  console.log('✅ Fixture saved:', fixture);
 
   // 2. Update the league table
+  console.log('🔄 Updating league table for:', fixture.league_id);
   await updateLeagueTable(fixture.league_id);
 
   return fixture;
@@ -99,28 +107,45 @@ export async function saveFixtureResult(
 
 // === UPDATE LEAGUE TABLE ===
 async function updateLeagueTable(leagueId: string) {
+  console.log('🔄 updateLeagueTable called for:', leagueId);
+  
   try {
     // Get all played fixtures
+    console.log('🔵 Fetching fixtures for league:', leagueId);
     const { data: fixtures, error: fixturesError } = await supabase
       .from('fixtures')
       .select('home_team_id, away_team_id, home_score, away_score')
       .eq('league_id', leagueId)
       .eq('played', true);
 
-    if (fixturesError) throw fixturesError;
+    if (fixturesError) {
+      console.error('❌ Fixtures error:', fixturesError);
+      throw fixturesError;
+    }
+    console.log('📊 Fixtures found:', fixtures?.length || 0);
 
     // Get all teams
+    console.log('🔵 Fetching teams for league:', leagueId);
     const { data: teams, error: teamsError } = await supabase
       .from('league_teams')
       .select('id, team_name')
       .eq('league_id', leagueId);
 
-    if (teamsError) throw teamsError;
+    if (teamsError) {
+      console.error('❌ Teams error:', teamsError);
+      throw teamsError;
+    }
+    console.log('🏆 Teams found:', teams?.length || 0);
+
+    if (!teams || teams.length === 0) {
+      console.log('⚠️ No teams found!');
+      return;
+    }
 
     // Calculate stats
     const stats: any = {};
     
-    teams?.forEach((team: any) => {
+    teams.forEach((team: any) => {
       stats[team.id] = {
         team_id: team.id,
         team_name: team.team_name,
@@ -139,7 +164,10 @@ async function updateLeagueTable(leagueId: string) {
       const home = stats[f.home_team_id];
       const away = stats[f.away_team_id];
       
-      if (!home || !away) return;
+      if (!home || !away) {
+        console.log('⚠️ Team not found in stats:', f.home_team_id, f.away_team_id);
+        return;
+      }
 
       const hg = f.home_score || 0;
       const ag = f.away_score || 0;
@@ -173,8 +201,11 @@ async function updateLeagueTable(leagueId: string) {
       s.goal_difference = s.goals_for - s.goals_against;
     });
 
+    console.log('📈 Calculated stats for', Object.keys(stats).length, 'teams');
+
     // Save to league_table
     for (const [teamId, stat] of Object.entries(stats)) {
+      console.log('💾 Saving stats for team:', teamId);
       const { error: upsertError } = await supabase
         .from('league_table')
         .upsert({
@@ -194,11 +225,18 @@ async function updateLeagueTable(leagueId: string) {
           onConflict: 'league_id, team_id'
         });
 
-      if (upsertError) throw upsertError;
+      if (upsertError) {
+        console.error('❌ Error saving for team', teamId, ':', upsertError);
+        throw upsertError;
+      } else {
+        console.log('✅ Saved for team:', teamId);
+      }
     }
 
+    console.log('✅ League table updated successfully!');
+
   } catch (error) {
-    console.error('Error updating league table:', error);
+    console.error('❌ Error updating league table:', error);
     throw error;
   }
 }
