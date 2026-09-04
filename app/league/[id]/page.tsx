@@ -76,7 +76,7 @@ export default function LeaguePage() {
       setLoading(true);
       setError(null);
       
-      // Get league info - using maybeSingle() instead of single()
+      // Get league info
       const { data: leagueData, error: leagueError } = await supabase
         .from('leagues')
         .select('*')
@@ -201,13 +201,8 @@ export default function LeaguePage() {
   const handleDeleteLeague = async () => {
     setDeleting(true);
     try {
-      // Delete fixtures
       await supabase.from('fixtures').delete().eq('league_id', leagueId);
-      
-      // Delete league teams
       await supabase.from('league_teams').delete().eq('league_id', leagueId);
-      
-      // Delete league
       const { error } = await supabase
         .from('leagues')
         .delete()
@@ -269,7 +264,6 @@ export default function LeaguePage() {
           <h1 className="text-2xl font-bold text-black">{league.name}</h1>
         </div>
         <div className="flex gap-2">
-          {/* Public View Button */}
           <Link
             href={`/public/league/${leagueId}`}
             target="_blank"
